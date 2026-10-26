@@ -83,10 +83,13 @@ data class UpdateInfo(
 
 object UpdateChecker {
     private const val TAG = "UpdateChecker"
-    private const val GITHUB_RELEASES_API = "https://api.github.com/repos/andreknieriem/open-headunit/releases?per_page=5"
-    const val GITHUB_RELEASES_WEB = "https://github.com/andreknieriem/open-headunit/releases"
+    private const val GITHUB_RELEASES_API = "https://api.github.com/repos/askAguilr/open-headunit-cluster-map/releases?per_page=5"
+    const val GITHUB_RELEASES_WEB = "https://github.com/askAguilr/open-headunit-cluster-map/releases"
 
     fun isPlayStoreInstallation(context: Context): Boolean {
+        // The playstore flavor supplies the modern native dependencies; this fork is sideloaded
+        // and must never direct users to a differently signed upstream update or Store listing.
+        if (BuildConfig.APPLICATION_ID != "com.andrerinas.headunitrevived") return false
         if (BuildConfig.FLAVOR == "playstore") return true
         return try {
             val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

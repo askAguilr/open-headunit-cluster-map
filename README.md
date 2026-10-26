@@ -50,12 +50,13 @@ gradlew.bat :app:assemblePlaystoreRelease
 Release signing uses the upstream `key.properties` mechanism (`storeFile`, `storePassword`, `keyAlias`,
 `keyPassword`). Use your own keystore; signing credentials are ignored by Git. The supplied APK is signed
 with this fork's key and cannot update an upstream Play Store installation.
+The in-app updater points to this fork's releases, not to upstream's differently signed APKs.
 
 The Android instrumented test uses an existing synthetic H.264 preflight clip to exercise decoding,
 PiP rendering and Surface recreation without a phone. Its preview activity is present only in debug
 builds and is excluded from release APKs. Synthetic video is **not** evidence of successful phone negotiation.
 
-Alpha 1 validation on Windows: 41 focused protocol/video tests passed, and the Android 12 emulator test
+Alpha 1 validation on Windows: 46 focused protocol/video/update tests passed, and the Android 12 emulator test
 passed (nonblank AVC output, continued rendering in PiP, expansion, Surface recreation and channel-local
 ACKs). The complete unit suite ran 4,037 tests: 4,035 passed, one was skipped, and
 `NearbySocketRetirementTest.inheritedSocketImplementationIsClosedAlongWithNearbyStreams` failed with

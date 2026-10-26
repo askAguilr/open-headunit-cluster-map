@@ -97,7 +97,7 @@ android {
         minSdk = 16
         targetSdk = 36
         versionCode = 120
-        versionName = "4.0.0-clustermap-alpha1"
+        versionName = "4.0.0-alpha1-clustermap"
         setProperty("archivesBaseName", "${applicationId}_${versionName}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true

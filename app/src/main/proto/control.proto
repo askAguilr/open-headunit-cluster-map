@@ -108,6 +108,7 @@ message Service
             optional uint32 pixel_aspect_ratio_e4 = 8;
             optional uint32 real_density = 9;
             optional MediaCodecType video_codec_type = 10;
+            optional UiConfig ui_config = 11;
         }
 
         required MediaCodecType available_type = 1;
@@ -115,6 +116,9 @@ message Service
         repeated AudioConfiguration audio_configs = 3;
         repeated VideoConfiguration video_configs = 4;
         optional bool available_while_in_call = 5;
+        optional uint32 display_id = 6;
+        // Android Auto display role: 0 = main, 1 = instrument cluster.
+        optional uint32 display_type = 7;
     }
 
     message InputSourceService
@@ -127,6 +131,7 @@ message Service
         repeated uint32 keycodes_supported = 1;
         optional TouchConfig touchscreen = 2;
         optional TouchConfig touchpad = 3;
+        optional uint32 display_id = 5;
     }
 
     message MediaSourceService

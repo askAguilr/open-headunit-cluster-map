@@ -229,6 +229,8 @@ class CommManager(
     private var physicalConnectionReached = false
     /** @Volatile: written on IO thread, read on Main and IO threads. */
     @Volatile private var _transport: AapTransport? = null
+
+    internal fun clusterMapSession() = _transport?.clusterMap
     @Volatile private var projectionVideoFocusSuppressed = false
     val isProjectionVideoFocusSuppressed: Boolean
         get() = projectionVideoFocusSuppressed

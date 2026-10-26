@@ -133,6 +133,17 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     // instead of persisting to Settings. This keeps toggles local to the Activity lifecycle.
     private var activityFullscreenOverride: Settings.FullscreenMode? = null
     private var touchOverlayView: OverlayTouchView? = null
+    private var clusterMapPipView: ClusterMapPipView? = null
+
+    private fun showClusterMapPip() {
+        val session = commManager.clusterMapSession() ?: return
+        val map = clusterMapPipView ?: ClusterMapPipView(this).also {
+            findViewById<FrameLayout>(R.id.container).addView(it,
+                FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            clusterMapPipView = it
+        }
+        map.showMap(session)
+    }
     private val performanceOverlay by lazy {
         PerformanceOverlay(settings) { videoDecoder.lastFrameRenderedMs }
     }
@@ -1098,6 +1109,10 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // complete in the background without creating a new Surface.
         lifecycleScope.launch {
             commManager.connectionState.collect { state ->
+                if (App.isPiPActive && clusterMapPipView?.visibility == View.VISIBLE) {
+                    clusterMapPipView?.showMap(if (state is CommManager.ConnectionState.TransportStarted)
+                        commManager.clusterMapSession() else null)
+                }
                 if (state is CommManager.ConnectionState.Disconnected ||
                     state is CommManager.ConnectionState.Connecting ||
                     state is CommManager.ConnectionState.HandshakeComplete) {
@@ -1861,8 +1876,10 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
-                var width = videoDecoder.videoWidth.coerceAtLeast(1).toFloat()
-                var height = videoDecoder.videoHeight.coerceAtLeast(1).toFloat()
+                val mapSession = commManager.clusterMapSession() != null
+                if (mapSession) showClusterMapPip()
+                var width = (if (mapSession) ClusterMapProtocol.WIDTH else videoDecoder.videoWidth).coerceAtLeast(1).toFloat()
+                var height = (if (mapSession) ClusterMapProtocol.HEIGHT else videoDecoder.videoHeight).coerceAtLeast(1).toFloat()
                 val ratio = width / height
 
                 // Android supports PiP aspect ratios between 1/2.39 (0.418) and 2.39.
@@ -1880,13 +1897,20 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     // Smooth transition for Android 12+
-                    paramsBuilder.setAutoEnterEnabled(true)
+                    // Map mode enters explicitly so a phone keyboard opened by an AA touch
+                    // does not get mistaken for the user minimizing the projection.
+                    paramsBuilder.setAutoEnterEnabled(!mapSession)
                     paramsBuilder.setSeamlessResizeEnabled(true)
                 }
 
                 App.isPiPActive = true
-                enterPictureInPictureMode(paramsBuilder.build())
+                if (!enterPictureInPictureMode(paramsBuilder.build())) {
+                    App.isPiPActive = false
+                    clusterMapPipView?.hideMap()
+                }
             } catch (e: Exception) {
+                App.isPiPActive = false
+                clusterMapPipView?.hideMap()
                 AppLog.e("Failed to enter PiP mode: ${e.message}")
                 e.printStackTrace()
                 ToastUtils.showToast(this, "PiP failed: ${e.localizedMessage}", Toast.LENGTH_SHORT, force = true)
@@ -1929,11 +1953,13 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         App.isPiPActive = isInPictureInPictureMode
         if (isInPictureInPictureMode) {
+            showClusterMapPip()
             // Hide UI elements during PiP (like FPS counter, loading overlay)
             findViewById<View>(R.id.loading_overlay)?.visibility = View.GONE
             stopCustomLoadingMedia()
             performanceOverlay.setVisible(false)
         } else {
+            clusterMapPipView?.hideMap()
             // Restore UI if needed
             performanceOverlay.setVisible(settings.showPerformanceOverlay)
             setFullscreen()
@@ -2071,6 +2097,15 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // Also the one signal that the next onPause is the user's own doing, so the call raise
         // below never argues with someone who chose to leave.
         userLeftDeliberately = true
+        if (ClusterMapProtocol.shouldAutoEnter(
+            sessionActive = commManager.clusterMapSession() != null &&
+                commManager.connectionState.value is CommManager.ConnectionState.TransportStarted,
+            finishing = isFinishing,
+            pipActive = App.isPiPActive,
+            followsTouch = VideoFocusReleasePolicy.coverFollowsTouch(lastProjectionTouchMs, SystemClock.elapsedRealtime())
+        )) {
+            enterPiP()
+        }
         super.onUserLeaveHint()
     }
 
@@ -2432,6 +2467,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     }
 
     override fun onDestroy() {
+        clusterMapPipView?.hideMap()
         // TextureView/GLES destruction can arrive after this activity removes its callback.
         // Stop our target now, while it is still valid, without touching a replacement owner.
         ownedSurface?.let {

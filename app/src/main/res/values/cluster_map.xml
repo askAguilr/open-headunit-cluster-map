@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cluster_app_name">Open Headunit Map PiP</string>
+    <string name="cluster_map_title">Secondary map in PiP (experimental)</string>
+    <string name="cluster_map_description">Show an independent map when you press Home. Requires PiP support. Saved immediately; disconnect and reconnect Self-Mode after changing this.</string>
+    <string name="cluster_map_reconnect">Saved. Disconnect and reconnect Android Auto to apply.</string>
+    <string name="cluster_map_waiting">Waiting for a secondary map… Start navigation in Android Auto. Expand to return.</string>
+    <string name="cluster_map_disconnected">Android Auto disconnected. Expand to reconnect.</string>
+</resources>

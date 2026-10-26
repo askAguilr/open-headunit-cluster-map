@@ -43,6 +43,8 @@ captures/
 
 # Secrets configuration file
 secrets.properties
+key.properties
+.kotlin/
 
 src/main/obj
 src/main/libs/armeabi/gdb.setup

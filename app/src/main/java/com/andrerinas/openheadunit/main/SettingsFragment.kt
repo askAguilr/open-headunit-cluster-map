@@ -781,6 +781,19 @@ class SettingsFragment : Fragment() {
         // --- General Settings ---
         items.add(SettingItem.CategoryHeader("general", R.string.category_general))
 
+        items.add(SettingItem.ToggleSettingEntry(
+            stableId = "clusterMapPip",
+            nameResId = R.string.cluster_map_title,
+            descriptionResId = R.string.cluster_map_description,
+            isChecked = settings.clusterMapPipEnabled,
+            isEnabled = android.os.Build.VERSION.SDK_INT >= 26 && requireContext().packageManager
+                .hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE),
+            onCheckedChanged = { enabled ->
+                settings.clusterMapPipEnabled = enabled
+                ToastUtils.showToast(requireContext(), R.string.cluster_map_reconnect, Toast.LENGTH_LONG, force = true)
+            }
+        ))
+
         // Auto-Optimize Wizard
         items.add(SettingItem.SettingEntry(
             stableId = "autoOptimize",
@@ -3106,6 +3119,7 @@ class SettingsFragment : Fragment() {
     ): Boolean {
         // The bottom Save action is always relevant when present.
         if (item is SettingItem.ActionButton && item.stableId == "bottomSaveButton") return true
+        if (item.stableId == "clusterMapPip" && query.isEmpty()) return true
 
         // Connection-type filter: hide settings that do not apply to the chosen connection,
         // in BOTH tabs and in search. USB hides WiFi settings, WiFi hides USB settings,

@@ -93,11 +93,11 @@ android {
         // installs, testers) and existing users just get a normal update. Only the display name
         // changed to Open Headunit. The code package and namespace stay openheadunit, so the
         // applicationId deliberately differs from the namespace, like com.google.talk for Hangouts.
-        applicationId = "com.andrerinas.headunitrevived"
+        applicationId = "com.askaguilr.openheadunit.clustermap"
         minSdk = 16
         targetSdk = 36
         versionCode = 120
-        versionName = "4.0.0-alpha"
+        versionName = "4.0.0-clustermap-alpha1"
         setProperty("archivesBaseName", "${applicationId}_${versionName}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
@@ -265,6 +265,9 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
     // Inline mocks exercise the final Android transport classes on JDK 21.
     testImplementation("org.mockito:mockito-core:5.14.2")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:core-ktx:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
 
     implementation(project(":contract"))
 

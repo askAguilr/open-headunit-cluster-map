@@ -49,6 +49,8 @@ internal class AapControlMedia(
             Media.MsgType.MEDIA_MESSAGE_STOP_VALUE -> return mediaSinkStopRequest(message.channel)
             Media.MsgType.MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST_VALUE -> {
                 val focusRequest = message.parse(Media.VideoFocusRequestNotification.newBuilder()).build()
+                if (focusRequest.hasDispChannelId() && focusRequest.dispChannelId == Channel.ID_CLUSTER_VIDEO &&
+                    aapTransport.clusterMap?.processClusterFocus() == true) return 0
                 AppLog.i("RX: Video Focus Request - mode: %s, reason: %s", focusRequest.mode, focusRequest.reason)
 
                 if (focusRequest.mode == Media.VideoFocusMode.VIDEO_FOCUS_NATIVE) {
@@ -351,7 +353,7 @@ internal class AapControlService(
     private fun serviceDiscoveryRequest(request: Control.ServiceDiscoveryRequest): Int {
         AppLog.i("Service Discovery Request: %s", request.phoneName)
 
-        val msg = ServiceDiscoveryResponse(context, aapAudio.sessionConfig)
+        val msg = ServiceDiscoveryResponse(context, aapAudio.sessionConfig, aapTransport.clusterMap != null)
         aapTransport.send(msg)
         return 0
     }

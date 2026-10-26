@@ -140,7 +140,7 @@ internal class AapMessageReassembler(
         // Losing CSD also needs video recovery, but only DATA consumes a sender credit.
         // A valid abandoned run was already reported as truncated by the reader audit.
         if (run.discarded && channel == Channel.ID_VID && run.type in 0..1) onDroppedVideoPayload()
-        if ((Channel.isAudio(channel) || channel == Channel.ID_VID) && run.type == 0) onDroppedMediaData(channel)
+        if ((Channel.isAudio(channel) || channel == Channel.ID_VID || channel == Channel.ID_CLUSTER_VIDEO) && run.type == 0) onDroppedMediaData(channel)
     }
 
     private fun releaseBytes(run: Run) {

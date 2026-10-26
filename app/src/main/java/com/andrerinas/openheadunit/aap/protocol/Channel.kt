@@ -17,11 +17,15 @@ object Channel {
     const val ID_NOTI = 11
     const val ID_PHONE = 12
     const val ID_WIFI = 13
+    const val ID_CLUSTER_VIDEO = 14
+    const val ID_CLUSTER_INPUT = 21
 
     fun name(channel: Int): String {
         when (channel) {
             ID_CTR -> return "CONTROL"
             ID_VID -> return "VIDEO"
+            ID_CLUSTER_VIDEO -> return "CLUSTER_VIDEO"
+            ID_CLUSTER_INPUT -> return "CLUSTER_INPUT"
             ID_INP -> return "INPUT"
             ID_SEN -> return "SENSOR"
             ID_MIC -> return "MIC"

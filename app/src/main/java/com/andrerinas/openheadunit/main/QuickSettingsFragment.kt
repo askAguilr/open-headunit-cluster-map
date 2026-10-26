@@ -88,6 +88,19 @@ class QuickSettingsFragment : DialogFragment() {
     private fun updateSettingsList() {
         val items = mutableListOf<SettingItem>()
 
+        items.add(SettingItem.ToggleSettingEntry(
+            stableId = "clusterMapPip",
+            nameResId = R.string.cluster_map_title,
+            descriptionResId = R.string.cluster_map_description,
+            isChecked = settings.clusterMapPipEnabled,
+            isEnabled = android.os.Build.VERSION.SDK_INT >= 26 && requireContext().packageManager
+                .hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE),
+            onCheckedChanged = { enabled ->
+                settings.clusterMapPipEnabled = enabled
+                ToastUtils.showToast(requireContext(), R.string.cluster_map_reconnect, Toast.LENGTH_LONG, force = true)
+            }
+        ))
+
         // --- Audio Section ---
         items.add(SettingItem.CategoryHeader("audio", R.string.category_audio))
 

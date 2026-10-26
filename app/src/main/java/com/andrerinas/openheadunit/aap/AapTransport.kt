@@ -102,6 +102,11 @@ class AapTransport(
 
     internal val aapAudio: AapAudio
     internal val aapVideo: AapVideo
+    // Snapshot at session creation: toggling the setting cannot change an active negotiation.
+    internal val clusterMap: ClusterMapSession? = if (
+        settings.clusterMapPipEnabled && android.os.Build.VERSION.SDK_INT >= 26 &&
+        context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)
+    ) ClusterMapSession(::send, ::setSessionId) else null
     private var sendThread: HandlerThread? = null
     private var pollThread: HandlerThread? = null
     private var videoThread: HandlerThread? = null
@@ -864,6 +869,7 @@ class AapTransport(
                 if (videoDecoder.onKeyframeObserved === keyframeObservedCallback) videoDecoder.onKeyframeObserved = null
             }
             cleanupStep("video") { aapVideo.release() }
+            cleanupStep("cluster map") { clusterMap?.close() }
             videoBufferPool.clear()
             videoBacklog.set(0)
             videoShedTotal.set(0)

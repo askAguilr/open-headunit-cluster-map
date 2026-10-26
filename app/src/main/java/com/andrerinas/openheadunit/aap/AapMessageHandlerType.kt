@@ -73,6 +73,8 @@ internal class AapMessageHandlerType(
         // and audio while leaving control running, and the three are one series here.
         transport.noteMessageReceived(message.channel, message.size)
 
+        if (transport.clusterMap?.process(message) == true) return
+
         val msgType = message.type
         val flags = message.flags
 

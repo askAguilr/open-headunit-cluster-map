@@ -1,5 +1,76 @@
 # Open Headunit
 
+## Experimental secondary-map PiP fork
+
+This fork adds an optional independent Android Auto cluster-map stream to Picture-in-Picture.
+It is intended first for **Self-Mode on the same phone**. The app installs as **Open Headunit Map PiP**
+(`com.askaguilr.openheadunit.clustermap`) alongside the upstream app, with separate settings.
+It is a community fork, not an official upstream release.
+
+### Try it
+
+1. Install the signed APK from this fork's Releases. Finish or skip the normal setup wizard.
+2. In Settings, enable **Secondary map in PiP (experimental)**. The setting saves immediately.
+3. End any running Android Auto session, including one in the original app. Start a fresh Self-Mode session
+   using the same Android Auto setup that works for you in the upstream app.
+4. Start navigation in Google Maps (the first test target), then press Home. The PiP window should show
+   the separate map stream. Expand PiP to return to the normal Android Auto interface.
+5. If Home is pressed immediately after a touch in Android Auto, automatic PiP is withheld briefly to
+   protect the phone keyboard. Wait three seconds and try Home, or use the existing exit dialog's PiP action.
+
+The feature is **off by default**. Changing it requires disconnecting and reconnecting Android Auto.
+With it off, no second display is advertised and the original projection PiP behavior is retained.
+Android 8+ and a device declaring native PiP support are required for the new map window.
+
+### Current limits and troubleshooting
+
+- A built APK does not prove that a particular phone accepts the second display. Real-phone Self-Mode
+  negotiation is still experimental. USB, wireless, Waze and other navigation apps need separate testing.
+- A waiting message means no map picture has rendered. Start a route first. If it stays there, expand PiP,
+  disable the feature and reconnect to recover the ordinary single-display setup.
+- The map is a separate 800×480 H.264 display, not a crop of the main Android Auto screen.
+- The fork does not integrate with a factory vehicle cluster. It does not add CarPlay.
+- Source is based on upstream `f9a72d480d51105870f62df6f0a40a1276e98a34` (4.0.0-alpha).
+  Your Play Store version may differ; exact compatibility with that binary has not been established.
+- For diagnosis, use the normal log export. Relevant entries start with `ClusterMap:` and report display
+  advertisement, SETUP, START, codec configuration and the first decoded picture.
+
+### Build and validation
+
+Use JDK 17, Android SDK 36, NDK 29.0.14206865 and CMake 3.22.1. The Gradle wrapper is included.
+The fork overrides R8 to 9.1.57 to support upstream's Kotlin 2.4 metadata.
+
+```text
+gradlew.bat :app:assemblePlaystoreDebug
+gradlew.bat :app:testPlaystoreDebugUnitTest
+gradlew.bat :app:connectedPlaystoreDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.andrerinas.openheadunit.aap.ClusterMapPipTest
+gradlew.bat :app:assemblePlaystoreRelease
+```
+
+Release signing uses the upstream `key.properties` mechanism (`storeFile`, `storePassword`, `keyAlias`,
+`keyPassword`). Use your own keystore; signing credentials are ignored by Git. The supplied APK is signed
+with this fork's key and cannot update an upstream Play Store installation.
+
+The Android instrumented test uses an existing synthetic H.264 preflight clip to exercise decoding,
+PiP rendering and Surface recreation without a phone. Its preview activity is present only in debug
+builds and is excluded from release APKs. Synthetic video is **not** evidence of successful phone negotiation.
+
+Alpha 1 validation on Windows: 41 focused protocol/video tests passed, and the Android 12 emulator test
+passed (nonblank AVC output, continued rendering in PiP, expansion, Surface recreation and channel-local
+ACKs). The complete unit suite ran 4,037 tests: 4,035 passed, one was skipped, and
+`NearbySocketRetirementTest.inheritedSocketImplementationIsClosedAlongWithNearbyStreams` failed with
+`BindException: Address already in use` while rebinding a closed socket. That existing socket code and
+test were not changed by this fork. The full suite is therefore not reported as passing.
+
+The approach was informed by Android Auto's Desktop Head Unit multi-display support and the public
+[mh2p-cluster v1105 implementation](https://github.com/fifthBro/mh2p-cluster/tree/v1105).
+This fork implements its own Android renderer and session handling; it does not bundle the Porsche
+mod's code, binaries, QNX hooks or assets. The upstream AGPL license remains in place.
+
+---
+
+The following documentation describes the upstream project.
+
 <a href='https://play.google.com/store/apps/details?id=com.andrerinas.headunitrevived'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width="200"/></a>
 <a href='http://www.amazon.com/gp/mas/dl/android?p=com.andrerinas.headunitrevived'><img alt='Available at Amazon Appstore' src='https://images-na.ssl-images-amazon.com/images/G/01/mobile-apps/devportal2/res/images/amazon-appstore-badge-english-black.png' width="200"/></a>
 

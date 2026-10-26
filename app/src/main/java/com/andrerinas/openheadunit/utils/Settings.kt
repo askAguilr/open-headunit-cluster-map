@@ -39,6 +39,11 @@ import com.andrerinas.openheadunit.connection.wifi.WifiLauncherMode
 
 class Settings(private val context: Context) {
 
+    /** Negotiated at connection time. Changing this requires a new projection session. */
+    var clusterMapPipEnabled: Boolean
+        get() = prefs.getBoolean("cluster-map-pip", false)
+        set(value) { prefs.edit().putBoolean("cluster-map-pip", value).apply() }
+
     private val _prefs: SharedPreferences? by lazy {
         try {
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

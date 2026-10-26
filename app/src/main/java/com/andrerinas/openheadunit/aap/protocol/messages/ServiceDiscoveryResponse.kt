@@ -3,6 +3,7 @@ package com.andrerinas.openheadunit.aap.protocol.messages
 import android.content.Context
 import com.andrerinas.openheadunit.App
 import com.andrerinas.openheadunit.aap.AapMessage
+import com.andrerinas.openheadunit.aap.ClusterMapProtocol
 import com.andrerinas.openheadunit.aap.NarrowBandProfilePolicy
 import com.andrerinas.openheadunit.aap.VehicleIdentityPolicy
 import com.andrerinas.openheadunit.aap.VehicleTypePolicy
@@ -21,11 +22,11 @@ import com.andrerinas.openheadunit.utils.VideoFallbackPolicy
 import com.andrerinas.openheadunit.aap.AudioSessionConfig
 import com.google.protobuf.Message
 
-internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSessionConfig)
-    : AapMessage(Channel.ID_CTR, Control.ControlMsgType.MESSAGE_SERVICE_DISCOVERY_RESPONSE_VALUE, makeProto(context, audioConfig)) {
+internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSessionConfig, clusterMap: Boolean = false)
+    : AapMessage(Channel.ID_CTR, Control.ControlMsgType.MESSAGE_SERVICE_DISCOVERY_RESPONSE_VALUE, makeProto(context, audioConfig, clusterMap)) {
 
     companion object {
-        private fun makeProto(context: Context, audioConfig: AudioSessionConfig): Message {
+        private fun makeProto(context: Context, audioConfig: AudioSessionConfig, clusterMap: Boolean): Message {
             val settings = App.provide(context).settings
             // Initialize HeadUnitScreenConfig with actual physical screen dimensions
             HeadUnitScreenConfig.init(context, context.resources.displayMetrics, settings)
@@ -52,6 +53,10 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
             val video = Control.Service.newBuilder().also { service ->
                 service.id = Channel.ID_VID
                 service.mediaSinkService = Control.Service.MediaSinkService.newBuilder().also { mediaSinkServiceBuilder ->
+                    if (clusterMap) {
+                        mediaSinkServiceBuilder.displayId = 0
+                        mediaSinkServiceBuilder.displayType = 0
+                    }
                     val explicitSoftwareHevc =
                         settings.videoCodec == VideoDecoder.CodecType.H265.settingsValue &&
                                 settings.forceSoftwareDecoding &&
@@ -172,10 +177,16 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
             }.build()
 
             services.add(video)
+            if (clusterMap) {
+                services.add(ClusterMapProtocol.videoService())
+                services.add(ClusterMapProtocol.inputService())
+                AppLog.i("ClusterMap: advertising independent H.264 map display 800x480")
+            }
 
             val input = Control.Service.newBuilder().also { service ->
                 service.id = Channel.ID_INP
                 service.inputSourceService = Control.Service.InputSourceService.newBuilder().also {
+                    if (clusterMap) it.displayId = 0
                     it.touchscreen = Control.Service.InputSourceService.TouchConfig.newBuilder().apply {
                         setWidth(HeadUnitScreenConfig.getNegotiatedWidth()) // Use negotiated width
                         setHeight(HeadUnitScreenConfig.getNegotiatedHeight()) // Use negotiated height
